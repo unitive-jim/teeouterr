@@ -26,8 +26,11 @@ if (!outpath || !executable) {
 }
 
 const fileStream = fs.createWriteStream(outpath);
-
 const child = spawn(executable, args);
+
+child.stdin.on('close', () => {
+  process.stdin.end();
+});
 
 child.stdout.on('data', (data) => {
   fileStream.write(data);
@@ -36,6 +39,20 @@ child.stdout.on('data', (data) => {
 child.stderr.on('data', (data) => {
   fileStream.write(data);
   process.stdout.write(data);
+});
+
+process.stdin.on('end', () => {
+  child.stdin.end();
+});
+
+process.stdin.on('readable', () => {
+  let chunk;
+  while (chunk = process.stdin.read()) {
+    const len = chunk ? chunk.length : 0;
+    if (len>0) {
+      child.stdin.write(chunk);
+    }
+  }
 });
 
 child.on('close', (code) => {
