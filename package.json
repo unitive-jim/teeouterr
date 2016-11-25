@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "teeouterr: execute a child process, merging stdout and stderr to a file, passing through stderr",
   "main": "teeouterr.js",
+  "bin": "teeouterr.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node teeouterr.js /tmp/t.log ./tester.js"
   },
   "author": "jim@unitive.works",
   "license": "MIT"
