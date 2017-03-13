@@ -6,18 +6,40 @@ const spawn = require('child_process').spawn;
 
 const [nodepath, scriptpath, outpath, executable, ...args] = process.argv;
 
-function usage() {
+// This script
+const justMerge = /.*mergeouterr/.test(scriptpath);
+
+function teeOutErrUsage() {
   const lines = [
   'Usage:',
-  '  node teeouterr.js <outpath> <executable> [...args]',
+  '  teeouterr <outpath> <executable> [...args]',
   '',
-  '  teeouterr.js executes the program <executable> with given command line args,',
+  '  teeouterr executes the program <executable> with given command line args,',
   '  writing the executable\'s stdout and stderr to a file at <outpath>,',
   '  while also writing the executable\'s stderr to teeouterr\'s stdout.',
-  '  If teeouterr itself has errors, they are written to stderr.'
+  '  If teeouterr itself has errors, they are written to stderr.',
   ];
   lines.forEach(line => console.error(line));
-  console.error({nodepath, scriptpath, outpath, executable});
+  console.error({nodepath, scriptpath, outpath, executable, justMerge});
+}
+
+function mergeOutErrUsage() {
+  const lines = [
+  'Usage:',
+  '  mergeouterr <outpath> <executable> [...args]',
+  '',
+  '  mergeouterr executes the program <executable> with given command line args,',
+  '  merging the executable\'s stdout and stderr to a file at <outpath>.',
+  '  Under most conditions, the only output is to the file, i.e. the stdout and stderr',
+  '  of the mergouterr process should be empty.'
+  ];
+  lines.forEach(line => console.error(line));
+  console.error({nodepath, scriptpath, outpath, executable, justMerge});
+}
+
+function usage() {
+  justMerge ? mergeOutErrUsage() : teeOutErrUsage();
+  console.error('\nNote: this program\'s behavior depends on which alias it is run with.');
   process.exit(1);
 }
 
@@ -85,7 +107,10 @@ child.stdout.on('data', (data) => {
 
 child.stderr.on('data', (data) => {
   fileStream.write(data);
-  process.stdout.write(data);
+
+  if (!justMerge) {
+    process.stdout.write(data);
+  }
 });
 
 process.stdin.on('end', () => {
