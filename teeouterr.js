@@ -28,6 +28,53 @@ if (!outpath || !executable) {
 const fileStream = fs.createWriteStream(outpath);
 const child = spawn(executable, args);
 
+const signals = {
+  SIGHUP: 1,
+  SIGINT: 2,
+  SIGQUIT: 3,
+  SIGILL: 4,
+  SIGTRAP: 5,
+  SIGABRT: 6,
+  SIGEMT: 7,
+  SIGFPE: 8,
+  SIGKILL: 9,
+  SIGBUS: 10,
+  SIGSEGV: 11,
+  SIGSYS: 12,
+  SIGPIPE: 13,
+  SIGALRM: 14,
+  SIGTERM: 15,
+  SIGURG: 16,
+  SIGSTOP: 17,
+  SIGTSTP: 18,
+  SIGCONT: 19,
+  SIGCHLD: 20,
+  SIGTTIN: 21,
+  SIGTTOU: 22,
+  SIGIO: 23,
+  SIGXCPU: 24,
+  SIGXFSZ: 25,
+  SIGVTALRM: 26,
+  SIGPROF: 27,
+  SIGWINCH: 28,
+  SIGINFO: 29,
+  SIGUSR1: 30,
+  SIGUSR2: 31,
+}
+
+child.on('exit', (code, signal) => {
+  if (typeof code === 'number') {
+    process.exitCode = code;
+  } else if (typeof signal === 'string') {
+    if (signal in signals) {
+      process.exitCode = 128 + signals[signal];
+    } else {
+      process.stdout.write(`Child process terminated with unrecognized signal: ${signal}\n`);
+      process.exitCode = 128 + 32;
+    }
+  }
+});
+
 child.stdin.on('close', () => {
   process.stdin.end();
 });
