@@ -14,10 +14,10 @@ function teeOutErrUsage() {
   'Usage:',
   '  teeouterr <outpath> <executable> [...args]',
   '',
-  '  teeouterr executes the program <executable> with given command line args,',
-  '  writing the executable\'s stdout and stderr to a file at <outpath>,',
-  '  while also writing the executable\'s stderr to teeouterr\'s stdout.',
-  '  If teeouterr itself has errors, they are written to stderr.',
+  '  teeouterr executes the program <executable> with given command line args.',
+  '  It merges the the executable\'s stdout and stderr to one stream,',
+  '  and then sends that stream to both the file at <outpath> and to stdout.',
+  '  If teeouterr itself has errors, they are written to stderr.'
   ];
   lines.forEach(line => console.error(line));
   console.error({nodepath, scriptpath, outpath, executable, justMerge});
@@ -30,8 +30,8 @@ function mergeOutErrUsage() {
   '',
   '  mergeouterr executes the program <executable> with given command line args,',
   '  merging the executable\'s stdout and stderr to a file at <outpath>.',
-  '  Under most conditions, the only output is to the file, i.e. the stdout and stderr',
-  '  of the mergouterr process should be empty.'
+  '  mergeouterr is functionally equivalent to using teeouterrr with stdout directed to /dev/null',
+  '  but is more efficient.'
   ];
   lines.forEach(line => console.error(line));
   console.error({nodepath, scriptpath, outpath, executable, justMerge});
@@ -91,7 +91,7 @@ child.on('exit', (code, signal) => {
     if (signal in signals) {
       process.exitCode = 128 + signals[signal];
     } else {
-      process.stdout.write(`Child process terminated with unrecognized signal: ${signal}\n`);
+      process.stderr.write(`Child process terminated with unrecognized signal: ${signal}\n`);
       process.exitCode = 128 + 32;
     }
   }
@@ -101,17 +101,19 @@ child.stdin.on('close', () => {
   process.stdin.end();
 });
 
-child.stdout.on('data', (data) => {
+function teeout(data) {
   fileStream.write(data);
-});
+  process.stdout.write(data);
+}
 
-child.stderr.on('data', (data) => {
+function justfileout(data) {
   fileStream.write(data);
+}
 
-  if (!justMerge) {
-    process.stdout.write(data);
-  }
-});
+const output = justMerge ? justfileout : teeout;
+
+child.stdout.on('data', output);
+child.stderr.on('data', output);
 
 process.stdin.on('end', () => {
   child.stdin.end();
