@@ -8,14 +8,17 @@
     "mergeouterr": "mergeouterr.js"
   },
   "scripts": {
-    "test": "node teeouterr.js /tmp/t.log ./tester.js"
+    "test": "mocha test"
   },
   "author": "jim@unitive.works",
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.5.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/unitive-jim/teeouterr.git"
