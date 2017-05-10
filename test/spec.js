@@ -5,12 +5,12 @@ const expect = chai.expect;
 
 describe('runner', function() {
 
-  it('nominal test using ./tester.js', function () {
+  it('nominal test using ./testers/nominal.js', function () {
     let chunks = [];
     function output(data) {
       chunks.push(data.toString());
     }
-    const executable = './tester.js';
+    const executable = './testers/nominal.js';
     const args = [];
     return runner.run({executable, args, output})
     .then(() => {
