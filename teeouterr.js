@@ -2,6 +2,7 @@
 'use strict';
 
 const fs = require('fs');
+const P = require('bluebird');
 const runner = require('./runner');
 
 const [nodepath, scriptpath, outpath, executable, ...args] = process.argv;
@@ -33,5 +34,6 @@ function output(data) {
   process.stdout.write(data);
 }
 
+const end = P.promisify(fileStream.end, {context: fileStream});
 runner.run({executable, args, output})
-.then(() => fileStream.close());
+.then(() => end());
