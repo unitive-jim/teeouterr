@@ -2,7 +2,7 @@
 `teeouterr`: Execute a child process, merging stdout and stderr to a file, and optionally to the console output
 
 `teeouterr` is a tiny app similar in concept to unix `tee`, with a minor twist. Rather than receiving its
-input through `stdin`, it runs a child process. Both the `stdout` and the `stderr` of the child proces are
+input through `stdin`, it runs a child process. Both the `stdout` and the `stderr` of the child process are
 merged together and written to specified file. The merged stream may optionally be sent to console output.
 
 Typically the child process will not require input via `stdin`, but `teeouterr` arranges to pipe it's `stdin`
