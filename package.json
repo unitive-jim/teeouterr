@@ -2,18 +2,24 @@
   "name": "teeouterr",
   "version": "1.0.2",
   "description": "Execute a child process, merging stdout and stderr to a file, and optionally to the console output",
-  "main": "teeouterr.js",
+  "main": "runner.js",
   "bin": {
     "teeouterr": "teeouterr.js",
-    "mergeouterr": "teeouterr.js"
+    "mergeouterr": "mergeouterr.js"
   },
   "scripts": {
-    "test": "node teeouterr.js /tmp/t.log ./tester.js"
+    "test": "mocha test"
   },
   "author": "jim@unitive.works",
   "license": "MIT",
-  "dependencies": {},
-  "devDependencies": {},
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/unitive-jim/teeouterr.git"

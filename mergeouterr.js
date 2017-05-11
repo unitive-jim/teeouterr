@@ -10,12 +10,10 @@ const [nodepath, scriptpath, outpath, executable, ...args] = process.argv;
 function usage() {
   const lines = [
   'Usage:',
-  '  teeouterr <outpath> <executable> [...args]',
+  '  mergeouterr <outpath> <executable> [...args]',
   '',
-  '  teeouterr executes the program <executable> with given command line args.',
-  '  It merges the the executable\'s stdout and stderr to one stream,',
-  '  and then sends that stream to both the file at <outpath> and to stdout.',
-  '  If teeouterr itself has errors, they are written to stderr.'
+  '  mergeouterr executes the program <executable> with given command line args,',
+  '  merging the executable\'s stdout and stderr to a file at <outpath>.',
   ];
   lines.forEach(line => console.error(line));
   console.error({nodepath, scriptpath, outpath, executable});
@@ -31,7 +29,6 @@ const fileStream = fs.createWriteStream(outpath);
 // Called for every chunk of data output by the child process to either stdout or stderr
 function output(data) {
   fileStream.write(data);
-  process.stdout.write(data);
 }
 
 const end = P.promisify(fileStream.end, {context: fileStream});
