@@ -95,9 +95,8 @@ describe('teeouterr', function() {
     describe('stress test', function() {
       const parent = null;
       testWithBlaster(parent, 2);
-      testWithBlaster(parent, 20);
-      testWithBlaster(parent, 20000);
-      testWithBlaster(parent, 200000);
+      testWithBlaster(parent, 1000);
+      testWithBlaster(parent, 100000);
     });
   });
 
@@ -106,9 +105,8 @@ describe('teeouterr', function() {
     describe('stress test', function() {
       const parent = './teeouterr.js';
       testWithBlaster(parent, 2);
-      testWithBlaster(parent, 20);
-      testWithBlaster(parent, 20000);
-      testWithBlaster(parent, 200000);
+      testWithBlaster(parent, 1000);
+      testWithBlaster(parent, 100000);
     });
 
   });
@@ -118,9 +116,8 @@ describe('teeouterr', function() {
     describe('stress test', function() {
       const parent = './mergeouterr.js';
       testWithBlaster(parent, 2);
-      testWithBlaster(parent, 20);
-      testWithBlaster(parent, 20000);
-      testWithBlaster(parent, 200000);
+      testWithBlaster(parent, 1000);
+      testWithBlaster(parent, 100000);
     });
 
   });

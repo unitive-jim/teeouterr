@@ -28,12 +28,17 @@ if (!outpath || !executable) {
 
 const fileStream = fs.createWriteStream(outpath);
 
+const fileWrite = P.promisify(fileStream.write, {context: fileStream});
+const fileEnd = P.promisify(fileStream.end, {context: fileStream});
+const stdoutWrite = P.promisify(process.stdout.write, {context: process.stdout});
+
+let pendingWrites = P.resolve();
+
 // Called for every chunk of data output by the child process to either stdout or stderr
 function output(data) {
-  fileStream.write(data);
-  process.stdout.write(data);
+  pendingWrites = pendingWrites.then(() => P.all([fileWrite(data), stdoutWrite(data)]));
 }
 
-const end = P.promisify(fileStream.end, {context: fileStream});
 runner.run({executable, args, output})
-.then(() => end());
+.then(() => pendingWrites)
+.then(() => fileEnd());
