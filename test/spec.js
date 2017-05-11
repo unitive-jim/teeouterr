@@ -65,60 +65,64 @@ function validateChecksum(lines, numLines) {
   expect(actualChecksum).to.equal(expectedCheckSum);
 };
 
-describe('runner', function() {
+describe('teeouterr', function() {
 
-  it('nominal test using ./testers/nominal.js', function () {
-    let chunks = [];
-    function output(data) {
-      chunks.push(data.toString());
-    }
-    const executable = './testers/nominal.js';
-    const args = [];
-    return runner.run({executable, args, output})
-    .then(() => {
-      const lines = chunks.sort().join('').split('\n');
-      const expected = [
-        '1. stdout',
-        '2. stdout',
-        '3. stdout',
-        '4. stderr',
-        '5. stdout',
-        '6. stdout end',
-        ''
-      ];
-      expect(lines).to.deep.equal(expected);
+  describe('runner', function() {
+
+    it('nominal test using ./testers/nominal.js', function () {
+      let chunks = [];
+      function output(data) {
+        chunks.push(data.toString());
+      }
+      const executable = './testers/nominal.js';
+      const args = [];
+      return runner.run({executable, args, output})
+      .then(() => {
+        const lines = chunks.sort().join('').split('\n');
+        const expected = [
+          '1. stdout',
+          '2. stdout',
+          '3. stdout',
+          '4. stderr',
+          '5. stdout',
+          '6. stdout end',
+          ''
+        ];
+        expect(lines).to.deep.equal(expected);
+      });
+    });
+
+    describe('stress test', function() {
+      const parent = null;
+      testWithBlaster(parent, 2);
+      testWithBlaster(parent, 20);
+      testWithBlaster(parent, 20000);
+      testWithBlaster(parent, 200000);
     });
   });
 
-  describe('stress test', function() {
-    const parent = null;
-    testWithBlaster(parent, 2);
-    testWithBlaster(parent, 20);
-    testWithBlaster(parent, 20000);
-    testWithBlaster(parent, 200000);
-  });
-});
+  describe('teeouterr', function() {
 
-describe('teeouterr', function() {
+    describe('stress test', function() {
+      const parent = './teeouterr.js';
+      testWithBlaster(parent, 2);
+      testWithBlaster(parent, 20);
+      testWithBlaster(parent, 20000);
+      testWithBlaster(parent, 200000);
+    });
 
-  describe('stress test', function() {
-    const parent = './teeouterr.js';
-    testWithBlaster(parent, 2);
-    testWithBlaster(parent, 20);
-    testWithBlaster(parent, 20000);
-    testWithBlaster(parent, 200000);
   });
 
-});
+  describe('mergeouterr', function() {
 
-describe('mergeouterr', function() {
+    describe('stress test', function() {
+      const parent = './mergeouterr.js';
+      testWithBlaster(parent, 2);
+      testWithBlaster(parent, 20);
+      testWithBlaster(parent, 20000);
+      testWithBlaster(parent, 200000);
+    });
 
-  describe('stress test', function() {
-    const parent = './mergeouterr.js';
-    testWithBlaster(parent, 2);
-    testWithBlaster(parent, 20);
-    testWithBlaster(parent, 20000);
-    testWithBlaster(parent, 200000);
   });
 
 });
