@@ -1,13 +1,16 @@
 const chai = require('chai');
 const crypto = require('crypto');
 const fs = require('fs');
+const path = require('path');
 const runner = require('../runner');
+const os = require('os');
 
 const expect = chai.expect;
 
 function tempFilePath() {
   const name = crypto.randomBytes(10).toString('hex');
-  return `/tmp/${name}.tmp`;
+  const tmpdir = os.tmpdir();
+  return path.resolve(tmpdir, `${name}.tmp`);
 }
 
 function testWithBlaster(parent, numLines) {
