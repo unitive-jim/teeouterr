@@ -45,7 +45,7 @@ function run({executable, args, output}, done) {
   // Create a promise that will be resolved when the child process stdio streams have all closed.
   // The promise will be rejected if an error event is raised on the child's streams
   const closed = new P((resolve, reject) => {
-    child.on('close', (code, signal) => resolve(asExitCode(code, signal)));
+    child.once('close', (code, signal) => resolve(asExitCode(code, signal)));
     child.stdout.once('error', err => reject(new Error('Error from child stdout:' + err.toString())));
     child.stdin.once('error', err => reject(new Error('Error from child stdin:' + err.toString())));
   });
@@ -58,10 +58,13 @@ function run({executable, args, output}, done) {
   child.stderr.on('data', output);
 
   // When the parent process stdin sees end of stream, tell the child that it will not receive any more input
-  process.stdin.once('end', () => child.stdin.end());
+  function onProcessStdinEnd() {
+    child.stdin.end();
+  }
+  process.stdin.once('end', onProcessStdinEnd);
 
   // When the parent process receives any data, forward it to the child process
-  process.stdin.on('readable', () => {
+  function onProcessStdinReadable() {
     let chunk;
     while (chunk = process.stdin.read()) {
       const len = chunk ? chunk.length : 0;
@@ -69,7 +72,8 @@ function run({executable, args, output}, done) {
         child.stdin.write(chunk);
       }
     }
-  });
+  }
+  process.stdin.once('readable', onProcessStdinReadable);
 
   // Wait for both process exit and stdio streams closed, order of which is not guaranteed.
   // When both have happened, call the supplied `done` callback.
@@ -82,8 +86,8 @@ function run({executable, args, output}, done) {
     if (exitCode === UNRECOGNIZED_SIGNAL) {
       process.stderr.write(`Child process terminated with unrecognized signal\n`);
     }
-    const emitters = [child, child.stdin, child.stdout, child.stderr, process.stdin, process.stdout, process.stderr];
-    emitters.forEach(e => e.removeAllListeners());
+    process.stdin.removeListener('readable', onProcessStdinReadable);
+    process.stdin.removeListener('end', onProcessStdinEnd);
     return exitCode;
   })
   .catch(err => {
