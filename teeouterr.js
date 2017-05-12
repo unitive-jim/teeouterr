@@ -28,6 +28,16 @@ if (!outpath || !executable) {
 
 const fileStream = fs.createWriteStream(outpath);
 
+const fileWriteFailed = new P((_, reject) => {
+  fileStream.once('error', err => reject(new Error('teeouterr error on fileStream:' + err.message)));
+});
+
+const stdoutFailed = new P((_, reject) => {
+  process.stdout.once('error', err => reject(new Error('teeouterr error on process.stdout:' + err.message)));
+});
+
+const eitherStreamFailed = P.any([fileWriteFailed, stdoutFailed]);
+
 // Called for every chunk of data output by the child process to either stdout or stderr
 function output(data) {
   fileStream.write(data);
@@ -35,5 +45,9 @@ function output(data) {
 }
 
 const end = P.promisify(fileStream.end, {context: fileStream});
-runner.run({executable, args, output})
-.then(() => end());
+
+const runnerCompleted = runner.run({executable, args, output});
+
+P.any([runnerCompleted, eitherStreamFailed])
+.then(() => end())
+.catch(err => console.error('\nteeouterr failed with err:' + err.toString() + err.stack));
