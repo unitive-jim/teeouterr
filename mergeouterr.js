@@ -37,7 +37,7 @@ function output(data) {
 
 const end = P.promisify(fileStream.end, {context: fileStream});
 
-const runnerCompleted = runner.run({executable, args, output});
+const runnerCompleted = runner.run({executable, args, stdOutput: output, errOutput: output});
 
 P.any([runnerCompleted, fileWriteFailed])
 .then(() => end())
