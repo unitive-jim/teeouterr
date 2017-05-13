@@ -30,6 +30,6 @@ const signals = {
   SIGINFO: 29,
   SIGUSR1: 30,
   SIGUSR2: 31,
-}
+};
 
 module.exports = signals;
