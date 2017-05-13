@@ -1,5 +1,6 @@
 const chai = require('chai');
 const crypto = require('crypto');
+const Deque = require('double-ended-queue');
 const fs = require('fs');
 const path = require('path');
 const runner = require('../runner');
@@ -27,15 +28,16 @@ function testWithBlaster(parent, numLines) {
     if (numLines >= 20000) {
       this.timeout(100 * numLines); // A rough heuristic that works on a MacBook with plenty of headroom
     }
-    let chunks = [];
+
+    const chunks = new Deque(numLines + 2);
     function output(data) {
-      chunks.push(data.toString());
+      chunks.enqueue(data.toString());
     }
 
     const [executable, ...args] = cmdline.split(' ');
-    return runner.run({executable, args, output})
+    return runner.run({executable, args, stdOutput: output, errOutput: output})
     .then(() => {
-      const lines = chunks.join('').split('\n');
+      const lines = chunks.toArray().join('').split('\n');
       validateChecksum(lines, numLines);
     })
     .then(() => {
@@ -73,15 +75,15 @@ describe('teeouterr', function() {
   describe('runner', function() {
 
     it('nominal test using ./testers/nominal.js', function () {
-      let chunks = [];
+      const chunks = new Deque();
       function output(data) {
-        chunks.push(data.toString());
+        chunks.enqueue(data.toString());
       }
       const executable = './testers/nominal.js';
       const args = [];
-      return runner.run({executable, args, output})
+      return runner.run({executable, args, stdOutput: output, errOutput: output})
       .then(() => {
-        const lines = chunks.sort().join('').split('\n');
+        const lines = chunks.toArray().sort().join('').split('\n');
         const expected = [
           '1. stdout',
           '2. stdout',
