@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const Deque = require('double-ended-queue');
 const fs = require('fs');
 const path = require('path');
-const runner = require('../runner');
+const runner = require('../lib/runner');
 const os = require('os');
 
 const expect = chai.expect;
@@ -109,7 +109,7 @@ describe('teeouterr', function() {
   describe('teeouterr', function() {
 
     describe('stress test', function() {
-      const parent = './teeouterr.js';
+      const parent = './bin/teeouterr.js';
       testWithBlaster(parent, 2);
       testWithBlaster(parent, 20);
       testWithBlaster(parent, 20000);
@@ -121,7 +121,7 @@ describe('teeouterr', function() {
   describe('mergeouterr', function() {
 
     describe('stress test', function() {
-      const parent = './mergeouterr.js';
+      const parent = './bin/mergeouterr.js';
       testWithBlaster(parent, 2);
       testWithBlaster(parent, 20);
       testWithBlaster(parent, 20000);

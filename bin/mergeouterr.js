@@ -1,10 +1,10 @@
 #! /usr/bin/env node
 'use strict';
 
-const BufferedWritable = require('./bufferedWritable');
+const BufferedWritable = require('../lib/bufferedWritable');
 const fs = require('fs');
 const P = require('bluebird');
-const runner = require('./runner');
+const runner = require('../lib/runner');
 
 const [nodepath, scriptpath, outpath, executable, ...args] = process.argv;
 
