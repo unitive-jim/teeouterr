@@ -2,10 +2,10 @@
   "name": "teeouterr",
   "version": "1.0.4",
   "description": "Execute a child process, merging stdout and stderr to a file, and optionally to the console output",
-  "main": "runner.js",
+  "main": "./lib/runner.js",
   "bin": {
-    "teeouterr": "teeouterr.js",
-    "mergeouterr": "mergeouterr.js"
+    "teeouterr": "bin/teeouterr.js",
+    "mergeouterr": "bin/mergeouterr.js"
   },
   "scripts": {
     "test": "mocha test"
@@ -14,6 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.5.0",
+    "double-ended-queue": "^2.1.0-0",
     "lodash": "^4.17.4"
   },
   "devDependencies": {

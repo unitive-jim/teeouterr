@@ -1,9 +1,10 @@
 #! /usr/bin/env node
 'use strict';
 
+const BufferedWritable = require('../lib/bufferedWritable');
 const fs = require('fs');
 const P = require('bluebird');
-const runner = require('./runner');
+const runner = require('../lib/runner');
 
 const [nodepath, scriptpath, outpath, executable, ...args] = process.argv;
 
@@ -25,20 +26,19 @@ if (!outpath || !executable) {
 }
 
 const fileStream = fs.createWriteStream(outpath);
+const bufferedFileStream = new BufferedWritable(fileStream);
 
 const fileWriteFailed = new P((_, reject) => {
-  fileStream.once('error', err => reject(new Error('teeouterr error on fileStream:' + err.message)));
+  fileStream.once('error', err => reject(new Error('mergeouterr error on fileStream:' + err.message)));
 });
 
 // Called for every chunk of data output by the child process to either stdout or stderr
 function output(data) {
-  fileStream.write(data);
+  bufferedFileStream.write(data);
 }
 
-const end = P.promisify(fileStream.end, {context: fileStream});
-
-const runnerCompleted = runner.run({executable, args, output});
+const runnerCompleted = runner.run({executable, args, stdOutput: output, errOutput: output});
 
 P.any([runnerCompleted, fileWriteFailed])
-.then(() => end())
+.then(() => bufferedFileStream.finish())
 .catch(err => console.error('\nmergeouterr failed with err:' + err.toString() + err.stack));

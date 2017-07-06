@@ -1,8 +1,9 @@
 const chai = require('chai');
 const crypto = require('crypto');
+const Deque = require('double-ended-queue');
 const fs = require('fs');
 const path = require('path');
-const runner = require('../runner');
+const runner = require('../lib/runner');
 const os = require('os');
 
 const expect = chai.expect;
@@ -27,15 +28,16 @@ function testWithBlaster(parent, numLines) {
     if (numLines >= 20000) {
       this.timeout(100 * numLines); // A rough heuristic that works on a MacBook with plenty of headroom
     }
-    let chunks = [];
+
+    const chunks = new Deque(numLines + 2);
     function output(data) {
-      chunks.push(data.toString());
+      chunks.enqueue(data.toString());
     }
 
     const [executable, ...args] = cmdline.split(' ');
-    return runner.run({executable, args, output})
+    return runner.run({executable, args, stdOutput: output, errOutput: output})
     .then(() => {
-      const lines = chunks.join('').split('\n');
+      const lines = chunks.toArray().join('').split('\n');
       validateChecksum(lines, numLines);
     })
     .then(() => {
@@ -73,15 +75,15 @@ describe('teeouterr', function() {
   describe('runner', function() {
 
     it('nominal test using ./testers/nominal.js', function () {
-      let chunks = [];
+      const chunks = new Deque();
       function output(data) {
-        chunks.push(data.toString());
+        chunks.enqueue(data.toString());
       }
       const executable = './testers/nominal.js';
       const args = [];
-      return runner.run({executable, args, output})
+      return runner.run({executable, args, stdOutput: output, errOutput: output})
       .then(() => {
-        const lines = chunks.sort().join('').split('\n');
+        const lines = chunks.toArray().sort().join('').split('\n');
         const expected = [
           '1. stdout',
           '2. stdout',
@@ -107,7 +109,7 @@ describe('teeouterr', function() {
   describe('teeouterr', function() {
 
     describe('stress test', function() {
-      const parent = './teeouterr.js';
+      const parent = './bin/teeouterr.js';
       testWithBlaster(parent, 2);
       testWithBlaster(parent, 20);
       testWithBlaster(parent, 20000);
@@ -119,7 +121,7 @@ describe('teeouterr', function() {
   describe('mergeouterr', function() {
 
     describe('stress test', function() {
-      const parent = './mergeouterr.js';
+      const parent = './bin/mergeouterr.js';
       testWithBlaster(parent, 2);
       testWithBlaster(parent, 20);
       testWithBlaster(parent, 20000);
