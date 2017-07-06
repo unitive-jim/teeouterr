@@ -6,7 +6,7 @@ const fs = require('fs');
 const P = require('bluebird');
 const runner = require('../lib/runner');
 
-const { stdout, stderr } = process;
+const { stdout } = process;
 
 const [nodepath, scriptpath, outpath, executable, ...args] = process.argv;
 
@@ -41,11 +41,7 @@ const stdoutFailed = new P((_, reject) => {
   stdout.once('error', err => reject(new Error('teeouterr error on process.stdout:' + err.message)));
 });
 
-const stderrFailed = new P((_, reject) => {
-  stderr.once('error', err => reject(new Error('teeouterr error on process.stderr:' + err.message)));
-});
-
-const eitherStreamFailed = P.any([fileWriteFailed, stdoutFailed, stderrFailed]);
+const eitherStreamFailed = P.any([fileWriteFailed, stdoutFailed]);
 
 // Called for every chunk of data output by the child process to either stdout or stderr
 function output(data) {
