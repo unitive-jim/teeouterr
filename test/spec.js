@@ -168,7 +168,6 @@ describe('teeouterr', function() {
       testExitCodeWith(parent, 31);
     });
 
-
     describe('stress test', function() {
       testWithBlaster(parent, 2);
       testWithBlaster(parent, 20);

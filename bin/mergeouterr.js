@@ -37,8 +37,19 @@ function output(data) {
   bufferedFileStream.write(data);
 }
 
-const runnerCompleted = runner.run({executable, args, stdOutput: output, errOutput: output});
+let exitCode = null;
+const runnerCompleted = runner.run({executable, args, stdOutput: output, errOutput: output})
+.then(status => {
+  exitCode = status.exitCode;
+});
 
 P.any([runnerCompleted, fileWriteFailed])
 .then(() => bufferedFileStream.finish())
-.catch(err => console.error('\nmergeouterr failed with err:' + err.toString() + err.stack));
+.catch(err => console.error('\nmergeouterr failed with err:' + err.toString() + err.stack))
+.finally(() => {
+  if (exitCode == null) {
+    console.error('Failed to set exitCode!');
+    exitCode = 1;
+  }
+  process.exit(exitCode);
+});
