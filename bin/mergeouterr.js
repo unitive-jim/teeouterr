@@ -15,6 +15,8 @@ function usage() {
   '',
   '  mergeouterr executes the program <executable> with given command line args,',
   '  merging the executable\'s stdout and stderr to a file at <outpath>.',
+  '  If the env variable PROGRESS is defined, mergeout error will write a progress message every N seconds,',
+  '  where N defaults to 60, but can be specified with the env variable PSECS'
   ];
   lines.forEach(line => console.error(line));
   console.error({nodepath, scriptpath, outpath, executable});
@@ -23,6 +25,24 @@ function usage() {
 
 if (!outpath || !executable) {
   usage();
+}
+
+let progressSecs = 60;
+let progressTimer = null;
+const progress = process.env.PROGRESS;
+if (progress) {
+  if (process.env.PSECS) {
+    progressSecs = parseFloat(process.env.PSECS) || 60;
+  }
+  progressTimer = setInterval(displayProgress, progressSecs*1000);
+}
+
+let numBytesWritten = 0;
+let numBytesAtLastInterval = 0;
+function displayProgress() {
+  const numBytesThisInterval = numBytesWritten - numBytesAtLastInterval;
+  numBytesAtLastInterval = numBytesWritten;
+  process.stderr.write(`${progress} ${numBytesWritten} ${numBytesThisInterval}\n`);
 }
 
 const fileStream = fs.createWriteStream(outpath);
@@ -34,6 +54,7 @@ const fileWriteFailed = new P((_, reject) => {
 
 // Called for every chunk of data output by the child process to either stdout or stderr
 function output(data) {
+  numBytesWritten += data.length;
   bufferedFileStream.write(data);
 }
 
@@ -44,6 +65,7 @@ const runnerCompleted = runner.run({executable, args, stdOutput: output, errOutp
 });
 
 P.any([runnerCompleted, fileWriteFailed])
+.then(() => progressTimer ? clearInterval(progressTimer) : null)
 .then(() => bufferedFileStream.finish())
 .catch(err => console.error('\nmergeouterr failed with err:' + err.toString() + err.stack))
 .finally(() => {
