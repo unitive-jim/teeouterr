@@ -14,6 +14,30 @@ function tempFilePath() {
   return path.resolve(tmpdir, `${name}.tmp`);
 }
 
+function testExitCodeWith(parent, code) {
+  let tempFile;
+  let cmdline;
+  if (parent) {
+    tempFile = tempFilePath();
+    cmdline = `${parent} ${tempFile} ./testers/exitwithcode.js ${code}`;
+  } else {
+    cmdline = `./testers/exitwithcode.js ${code}`;
+  }
+
+  it(cmdline, function () {
+    const chunks = new Deque();
+    function output(data) {
+      chunks.enqueue(data.toString());
+    }
+
+    const [executable, ...args] = cmdline.split(' ');
+    return runner.run({executable, args, stdOutput: output, errOutput: output})
+    .then(status => {
+      return expect(status).to.deep.equal({ exitCode: code, closeCode: code });
+    });
+  });
+}
+
 function testWithBlaster(parent, numLines) {
   let tempFile;
   let cmdline;
@@ -36,7 +60,8 @@ function testWithBlaster(parent, numLines) {
 
     const [executable, ...args] = cmdline.split(' ');
     return runner.run({executable, args, stdOutput: output, errOutput: output})
-    .then(() => {
+    .then(status => {
+      expect(status).to.deep.equal({ exitCode: 0, closeCode: 0 });
       const lines = chunks.toArray().join('').split('\n');
       validateChecksum(lines, numLines);
     })
@@ -97,8 +122,17 @@ describe('teeouterr', function() {
       });
     });
 
-    describe('stress test', function() {
+    const parent = null;
+
+    describe('preserves error code', () => {
       const parent = null;
+      testExitCodeWith(parent, 0);
+      testExitCodeWith(parent, 1);
+      testExitCodeWith(parent, 2);
+      testExitCodeWith(parent, 31);
+    });
+
+    describe('stress test', function() {
       testWithBlaster(parent, 2);
       testWithBlaster(parent, 20);
       testWithBlaster(parent, 20000);
@@ -107,27 +141,39 @@ describe('teeouterr', function() {
   });
 
   describe('teeouterr', function() {
+    const parent = './bin/teeouterr.js';
+
+    describe('preserves error code', () => {
+      testExitCodeWith(parent, 0);
+      testExitCodeWith(parent, 1);
+      testExitCodeWith(parent, 2);
+      testExitCodeWith(parent, 31);
+    });
 
     describe('stress test', function() {
-      const parent = './bin/teeouterr.js';
       testWithBlaster(parent, 2);
       testWithBlaster(parent, 20);
       testWithBlaster(parent, 20000);
       testWithBlaster(parent, 200000);
     });
-
   });
 
   describe('mergeouterr', function() {
+    const parent = './bin/mergeouterr.js';
+
+    describe('preserves error code', () => {
+      testExitCodeWith(parent, 0);
+      testExitCodeWith(parent, 1);
+      testExitCodeWith(parent, 2);
+      testExitCodeWith(parent, 31);
+    });
 
     describe('stress test', function() {
-      const parent = './bin/mergeouterr.js';
       testWithBlaster(parent, 2);
       testWithBlaster(parent, 20);
       testWithBlaster(parent, 20000);
       testWithBlaster(parent, 200000);
     });
-
   });
 
 });

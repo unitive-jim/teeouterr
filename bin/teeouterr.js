@@ -49,10 +49,21 @@ function output(data) {
   bufferedStdout.write(data);
 }
 
-const runnerCompleted = runner.run({executable, args, stdOutput: output, errOutput: output});
+let exitCode = null;
+const runnerCompleted = runner.run({executable, args, stdOutput: output, errOutput: output})
+.then(status => {
+  exitCode = status.exitCode;
+});
 
 P.any([runnerCompleted, eitherStreamFailed])
 .then(() => P.all([bufferedFileStream.finish(), bufferedStdout.finish()]))
 .catch(err => {
   console.error('\nteeouterr failed with err:' + err.toString() + err.stack);
+})
+.finally(() => {
+  if (exitCode == null) {
+    console.error('Failed to set exitCode!');
+    exitCode = 1;
+  }
+  process.exit(exitCode);
 });
