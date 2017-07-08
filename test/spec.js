@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const chai = require('chai');
 const crypto = require('crypto');
 const Deque = require('double-ended-queue');
@@ -38,14 +39,14 @@ function testExitCodeWith(parent, code) {
   });
 }
 
-function testWithBlaster(parent, numLines) {
+function testWithBlaster(parent, numLines, delay=0, options = {env: process.env}) {
   let tempFile;
   let cmdline;
   if (parent) {
     tempFile = tempFilePath();
-    cmdline = `${parent} ${tempFile} ./testers/blaster.js ${numLines}`;
+    cmdline = `${parent} ${tempFile} ./testers/blaster.js ${numLines} ${delay}`;
   } else {
-    cmdline = `./testers/blaster.js ${numLines}`;
+    cmdline = `./testers/blaster.js ${numLines} ${delay}`;
   }
 
   it(cmdline, function () {
@@ -59,11 +60,17 @@ function testWithBlaster(parent, numLines) {
     }
 
     const [executable, ...args] = cmdline.split(' ');
-    return runner.run({executable, args, stdOutput: output, errOutput: output})
+    return runner.run({executable, args, stdOutput: output, errOutput: output, options})
     .then(status => {
       expect(status).to.deep.equal({ exitCode: 0, closeCode: 0 });
       const lines = chunks.toArray().join('').split('\n');
-      validateChecksum(lines, numLines);
+      if (/teeouterr/.test(parent)) {
+        validateChecksum(lines, numLines);
+      } else if (options.env.PROGRESS) {
+        const progressLines = _.filter(lines, line => line.includes(options.env.PROGRESS));
+        expect(progressLines).to.exist;
+        expect(progressLines).to.have.length.above(2);
+      }
     })
     .then(() => {
       if (tempFile) {
@@ -174,6 +181,15 @@ describe('teeouterr', function() {
       testWithBlaster(parent, 20000);
       testWithBlaster(parent, 200000);
     });
+
+    describe('with delay and progress', function() {
+      const parent = './bin/mergeouterr.js';
+      const options = {
+        env: _.assign({}, process.env, {PSECS: 0.2, PROGRESS: 'Running...'})
+      };
+      testWithBlaster(parent, 2000, 5, options);
+    });
+
   });
 
 });

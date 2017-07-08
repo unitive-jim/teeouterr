@@ -10,12 +10,18 @@ const stdout = process.stdout;
 const bufferedStdout = new BufferedWritable(stdout);
 
 const numLines = parseInt(process.argv[2], 10) || 1;
+const delay = parseInt(process.argv[3], 10) || 0;
 
+let remaining = numLines;
 function linesToMerge() {
-  // We want buffers with random sizes around 64K bytes.
-  // All but the first line is 101 bytes, which is 648.8 lines
-  // We'll return a random number in the range of 640..660
-  return 640 + Math.trunc(Math.random()*20);
+  const minLines = delay ? 2 : 50;
+  const maxLines = delay ? 30 : 600;
+  let toMerge = Math.trunc(Math.random()*(maxLines-minLines)) + minLines;
+  if (toMerge > remaining) {
+    toMerge = remaining;
+  }
+  remaining -= toMerge;
+  return toMerge;
 }
 
 const hash = crypto.createHash('sha256');
@@ -53,14 +59,33 @@ const failed = new P((_, reject) => {
   stdout.once('error', err => reject(new Error('blaster error on stdout:' + err.message)));
 });
 
-const writeAll = P.resolve()
-  .then(() => {
-    while (!buffers.isEmpty()) {
-      const buffer = buffers.dequeue();
-      bufferedStdout.write(buffer);
+function defer(delay) {
+  return new P(resolve => {
+    if (delay == 0) {
+      setImmediate(resolve);
+    } else {
+      setTimeout(resolve, delay);
     }
-  })
-  .then(() => bufferedStdout.write(checksum));
+  });
+}
+
+function writeAllBuffers() {
+  return P.resolve()
+  .then(() => {
+    if (buffers.isEmpty()) {
+      return P.resolve();
+    } else {
+      bufferedStdout.write(buffers.dequeue());
+      return defer(delay)
+      .then(() => writeAllBuffers());
+    }
+  });
+}
+
+const writeAll = P.resolve()
+  .then(() => writeAllBuffers())
+  .then(() => bufferedStdout.write(checksum))
+  .then(() => bufferedStdout.finish());
 
 P.any([writeAll, failed])
 .catch(err => console.error('\n\nblaster failed with error:' + err.toString() + err.stack));
