@@ -27,23 +27,9 @@ if (!outpath || !executable) {
   usage();
 }
 
-let progressSecs = 60;
-let progressTimer = null;
 const progress = process.env.PROGRESS;
-if (progress) {
-  if (process.env.PSECS) {
-    progressSecs = parseFloat(process.env.PSECS) || 60;
-  }
-  progressTimer = setInterval(displayProgress, progressSecs*1000);
-}
-
+let progressTimer = null;
 let numBytesWritten = 0;
-let numBytesAtLastInterval = 0;
-function displayProgress() {
-  const numBytesThisInterval = numBytesWritten - numBytesAtLastInterval;
-  numBytesAtLastInterval = numBytesWritten;
-  process.stderr.write(`${progress} ${numBytesWritten} ${numBytesThisInterval}\n`);
-}
 
 const fileStream = fs.createWriteStream(outpath);
 const bufferedFileStream = new BufferedWritable(fileStream);
@@ -63,6 +49,21 @@ const runnerCompleted = runner.run({executable, args, stdOutput: output, errOutp
 .then(status => {
   exitCode = status.exitCode;
 });
+
+if (progress) {
+  let progressSecs = 60;
+  if (process.env.PSECS) {
+    progressSecs = parseFloat(process.env.PSECS) || 60;
+  }
+  let numBytesAtLastInterval = 0;
+  function displayProgress() {
+    const numBytesThisInterval = numBytesWritten - numBytesAtLastInterval;
+    numBytesAtLastInterval = numBytesWritten;
+    const stalled = numBytesThisInterval == 0 ? 'stalled' : '';
+    process.stderr.write(`${progress} ${stalled}\n`);
+  }
+  progressTimer = setInterval(displayProgress, progressSecs*1000);
+}
 
 P.any([runnerCompleted, fileWriteFailed])
 .then(() => progressTimer ? clearInterval(progressTimer) : null)
