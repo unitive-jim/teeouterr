@@ -33,7 +33,8 @@ function testExitCodeWith(parent, code) {
 
     const [executable, ...args] = cmdline.split(' ');
     return runner.run({executable, args, stdOutput: output, errOutput: output})
-    .then(status => {
+    .then(s => {
+      const status = _.omit(s, 'eventOrder');
       return expect(status).to.deep.equal({ exitCode: code, closeCode: code });
     });
   });
@@ -61,7 +62,8 @@ function testWithBlaster(parent, numLines, delay=0, options = {env: process.env}
 
     const [executable, ...args] = cmdline.split(' ');
     return runner.run({executable, args, stdOutput: output, errOutput: output, options})
-    .then(status => {
+    .then(s => {
+      const status = _.omit(s, 'eventOrder');
       expect(status).to.deep.equal({ exitCode: 0, closeCode: 0 });
       const lines = chunks.toArray().join('').split('\n');
       if (/teeouterr/.test(parent)) {
