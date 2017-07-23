@@ -71,8 +71,10 @@ P.any([runnerCompleted, fileWriteFailed])
 .catch(err => console.error('\nmergeouterr failed with err:' + err.toString() + err.stack))
 .finally(() => {
   if (exitCode == null) {
-    console.error('Failed to set exitCode!');
+    console.error('\nFailed to set exitCode!');
     exitCode = 1;
+  } else if (exitCode != 0) {
+    console.error(`\nChild ${executable} exited with error status: ${exitCode}`);
   }
   process.exit(exitCode);
 });
