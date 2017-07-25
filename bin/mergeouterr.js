@@ -65,16 +65,25 @@ if (progress) {
   progressTimer = setInterval(displayProgress, progressSecs*1000);
 }
 
+function stopProgress() {
+  clearInterval(progressTimer);
+  if (exitCode == null || exitCode != 0) {
+    process.stderr.write(`${progress} exited with code ${exitCode} with ${numBytesWritten} bytes written\n`);
+  } else {
+    process.stderr.write(`${progress} completed succesfully with ${numBytesWritten} bytes written\n`);
+  }
+}
+
 P.any([runnerCompleted, fileWriteFailed])
-.then(() => progressTimer ? clearInterval(progressTimer) : null)
+.then(() => progressTimer ? stopProgress() : null)
 .then(() => bufferedFileStream.finish())
-.catch(err => console.error('\nmergeouterr failed with err:' + err.toString() + err.stack))
+.catch(err => process.stderr.write('\nmergeouterr failed with err:' + err.toString() + err.stack))
 .finally(() => {
   if (exitCode == null) {
-    console.error('\nFailed to set exitCode!');
+    process.stderr.write('\nFailed to set exitCode!');
     exitCode = 1;
   } else if (exitCode != 0) {
-    console.error(`\nChild ${executable} exited with error status: ${exitCode}`);
+    process.stderr.write(`\nChild ${executable} exited with error status: ${exitCode}`);
   }
   process.exit(exitCode);
 });
