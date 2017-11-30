@@ -117,7 +117,7 @@ describe('teeouterr', function() {
       const args = [];
       return runner.run({executable, args, stdOutput: output, errOutput: output})
       .then(() => {
-        const lines = chunks.toArray().sort().join('').split('\n');
+        const lines = _.compact(chunks.toArray().join('').split('\n')).sort();
         const expected = [
           '1. stdout',
           '2. stdout',
@@ -125,7 +125,6 @@ describe('teeouterr', function() {
           '4. stderr',
           '5. stdout',
           '6. stdout end',
-          ''
         ];
         expect(lines).to.deep.equal(expected);
       });
