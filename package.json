@@ -1,6 +1,6 @@
 {
   "name": "teeouterr",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "Execute a child process, merging stdout and stderr to a file, and optionally to the console output",
   "main": "./lib/runner.js",
   "bin": {
